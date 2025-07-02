@@ -231,6 +231,7 @@ class MaterialViewModel @Inject constructor(
                                 error = response.errorMessage
                             )
                         }
+                        _event.send(MaterialState.Event.ShowError)
                     }
 
                     is ApiResponse.Loading -> {
@@ -273,6 +274,7 @@ class MaterialViewModel @Inject constructor(
                                 error = response.errorMessage
                             )
                         }
+                        _event.send(MaterialState.Event.ShowError)
                     }
 
                     is ApiResponse.Loading -> {
@@ -351,6 +353,7 @@ class MaterialViewModel @Inject constructor(
                                     error = response.errorMessage
                                 )
                             }
+                            _event.send(MaterialState.Event.ShowError)
                         }
 
                         is ApiResponse.Loading -> {

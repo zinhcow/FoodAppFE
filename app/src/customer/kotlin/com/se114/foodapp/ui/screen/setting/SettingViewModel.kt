@@ -24,7 +24,7 @@ import javax.inject.Inject
 class SettingViewModel @Inject constructor(
     private val loadProfileUseCase: LoadProfileUseCase,
     private val logoutUseCase: LogOutUseCase,
-    private val clearAllCartUseCase: ClearAllCartUseCase
+    private val clearAllCartUseCase: ClearAllCartUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(Setting.UiState())
@@ -32,7 +32,6 @@ class SettingViewModel @Inject constructor(
 
     private val _event = Channel<Setting.Event>()
     val event = _event.receiveAsFlow()
-
 
 
     fun getProfile() {
@@ -142,6 +141,7 @@ class SettingViewModel @Inject constructor(
                     _event.send(Setting.Event.ShowLogoutDialog)
                 }
             }
+
             is Setting.Action.OnSecurityClicked -> {
                 viewModelScope.launch {
                     _event.send(Setting.Event.NavigateToSecurity)
@@ -151,37 +151,37 @@ class SettingViewModel @Inject constructor(
     }
 }
 
-    object Setting {
-        data class UiState(
-            val profile: Account = Account(),
-            val isLoading: Boolean = false,
-            val error: String? = null,
-            )
+object Setting {
+    data class UiState(
+        val profile: Account = Account(),
+        val isLoading: Boolean = false,
+        val error: String? = null,
+    )
 
-        sealed interface Event {
-            data object NavigateToSecurity : Event
-            data object NavigateToAddress : Event
-            data object NavigateToVoucher : Event
-            data object NavigateToHelp : Event
-            data object NavigateToContact : Event
-            data object NavigateToPrivacy : Event
-            data object NavigateToProfile : Event
-            data object ShowLogoutDialog : Event
-            data object ShowError : Event
+    sealed interface Event {
+        data object NavigateToSecurity : Event
+        data object NavigateToAddress : Event
+        data object NavigateToVoucher : Event
+        data object NavigateToHelp : Event
+        data object NavigateToContact : Event
+        data object NavigateToPrivacy : Event
+        data object NavigateToProfile : Event
+        data object ShowLogoutDialog : Event
+        data object ShowError : Event
 
-        }
-
-        sealed interface Action {
-            data object OnLogOutClicked : Action
-            data object OnLogout : Action
-            data object OnLoadProfile : Action
-            data object OnProfileClicked : Action
-            data object OnAddressClicked : Action
-            data object OnVoucherClicked : Action
-            data object OnHelpClicked : Action
-            data object OnContactClicked : Action
-            data object OnPrivacyClicked : Action
-            data object OnSecurityClicked : Action
-
-        }
     }
+
+    sealed interface Action {
+        data object OnLogOutClicked : Action
+        data object OnLogout : Action
+        data object OnLoadProfile : Action
+        data object OnProfileClicked : Action
+        data object OnAddressClicked : Action
+        data object OnVoucherClicked : Action
+        data object OnHelpClicked : Action
+        data object OnContactClicked : Action
+        data object OnPrivacyClicked : Action
+        data object OnSecurityClicked : Action
+
+    }
+}

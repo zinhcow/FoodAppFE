@@ -10,6 +10,7 @@ import androidx.navigation.toRoute
 import com.example.foodapp.data.model.Account
 
 import com.example.foodapp.domain.use_case.auth.FirebaseResult
+import com.example.foodapp.domain.use_case.auth.LogOutUseCase
 import com.example.foodapp.ui.screen.components.validateField
 import com.se114.foodapp.domain.use_case.user.LoadProfileUseCase
 import com.se114.foodapp.domain.use_case.user.UpdateProfileUseCase
@@ -29,6 +30,7 @@ import javax.inject.Inject
 class ProfileViewModel @Inject constructor(
     private val loadProfileUseCase: LoadProfileUseCase,
     private val updateProfileUseCase: UpdateProfileUseCase,
+    private val logOutUseCase: LogOutUseCase,
     val savedStateHandle: SavedStateHandle,
     ) : ViewModel() {
     private val isUpdatingArgument=  savedStateHandle.toRoute<com.example.foodapp.navigation.Profile>().isUpdating
@@ -75,12 +77,14 @@ class ProfileViewModel @Inject constructor(
 
 
             Profile.Action.OnBackAuth -> {
+                logOut()
                 viewModelScope.launch {
                     _event.send(Profile.Event.NavigateAuth)
                 }
             }
 
             Profile.Action.OnBackLogin -> {
+                logOut()
                 viewModelScope.launch {
                     _event.send(Profile.Event.NavigateLogin)
                 }
@@ -133,6 +137,23 @@ class ProfileViewModel @Inject constructor(
                 displayNameError = displayNameError,
                 isValid = isValid
             )
+        }
+    }
+    private fun logOut(){
+        viewModelScope.launch {
+            logOutUseCase.invoke().collect{result->
+                when(result){
+                    is FirebaseResult.Loading -> {
+
+                    }
+                    is FirebaseResult.Success -> {
+
+                    }
+                    is FirebaseResult.Failure -> {
+
+                    }
+                }
+            }
         }
     }
 

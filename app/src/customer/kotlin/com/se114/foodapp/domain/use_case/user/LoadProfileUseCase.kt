@@ -8,6 +8,7 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.tasks.await
@@ -16,51 +17,54 @@ import javax.inject.Inject
 class LoadProfileUseCase @Inject constructor(
     private val accountRepository: AccountRepository
 ) {
-     operator fun invoke()= flow<FirebaseResult<Account>> {
-         emit(FirebaseResult.Loading)
-         try {
-             val firebaseUser =
-                 Firebase.auth.currentUser ?: throw Exception("User not logged in")
-             val uid = firebaseUser.uid
-             val docRef = Firebase.firestore.collection("users").document(uid)
-             var userDoc = docRef.get().await()
+    operator fun invoke(): Flow<FirebaseResult<Account>> = flow {
+        emit(FirebaseResult.Loading)
 
-             // Nếu user chưa có document (login bằng Google chẳng hạn)
-             if (!userDoc.exists()) {
-                 val newUser = mapOf(
-                     "id" to firebaseUser.uid,
-                     "displayName" to firebaseUser.displayName,
-                     "email" to firebaseUser.email,
-                     "avatar" to firebaseUser.photoUrl,
-                     "phoneNumber" to "",
-                     "gender" to "",
-                     "dob" to ""
-                 )
-                 docRef.set(newUser).await()
-                 userDoc = docRef.get().await() // load lại sau khi tạo
-             }
+        val firebaseUser = Firebase.auth.currentUser
+        if (firebaseUser == null) {
+            emit(FirebaseResult.Failure("Người dùng chưa đăng nhập"))
+            return@flow
+        }
 
-             val baseAccount = accountRepository.getUserProfile()
-             val accountLoaded = Account(
-                 displayName = baseAccount.displayName,
-                 email = baseAccount.email,
-                 avatar = baseAccount.avatar,
-                 phoneNumber = userDoc.data?.get("phoneNumber") as? String ?: "",
-                 gender = userDoc.data?.get("gender") as? String ?: "",
-                 dob = (userDoc.data?.get("dob") as? String)?.let {
-                     StringUtils.parseLocalDate(
-                         it
-                     )
-                 }
-             )
+        try {
+            val uid = firebaseUser.uid
+            val docRef = Firebase.firestore.collection("users").document(uid)
+            var userDoc = docRef.get().await()
 
-             emit(FirebaseResult.Success(accountLoaded))
+            // Nếu user chưa có document (lần đầu login Google)
+            if (!userDoc.exists()) {
+                val newUser = mapOf(
+                    "id" to firebaseUser.uid,
+                    "displayName" to (firebaseUser.displayName ?: ""),
+                    "email" to (firebaseUser.email ?: ""),
+                    "avatar" to (firebaseUser.photoUrl?.toString() ?: ""),
+                    "phoneNumber" to "",
+                    "gender" to "",
+                    "dob" to ""
+                )
 
-         } catch (e: Exception) {
-             e.printStackTrace()
-             emit(FirebaseResult.Failure("Lỗi không xác định"))
-         }
+                docRef.set(newUser).await()
+                userDoc = docRef.get().await() // Reload sau khi tạo
+            }
 
-     }.flowOn(Dispatchers.IO)
+            // Map dữ liệu từ Firestore
+            val account = Account(
+                displayName = userDoc.getString("displayName") ?: "",
+                email = userDoc.getString("email") ?: "",
+                avatar = userDoc.getString("avatar") ?: "",
+                phoneNumber = userDoc.getString("phoneNumber") ?: "",
+                gender = userDoc.getString("gender") ?: "",
+                dob = userDoc.getString("dob")?.let { StringUtils.parseLocalDate(it) }
+            )
+
+            emit(FirebaseResult.Success(account))
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emit(FirebaseResult.Failure("Không thể tải thông tin người dùng: ${e.localizedMessage}"))
+        }
+
+    }.flowOn(Dispatchers.IO)
+
 
 }

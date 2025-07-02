@@ -123,7 +123,7 @@ class StaffDetailsViewModel @Inject constructor(
                 fullNameError = validateField(
                     current.staff.fullName.trim(),
                     "Tên không hợp lệ"
-                ) { it.matches(Regex("^[\\\\p{L}][\\\\p{L} .'-]{1,39}\$")) }
+                ) { it.matches(Regex("^[\\p{L}][\\p{L} .'-]{1,39}$")) }
 
 
             }

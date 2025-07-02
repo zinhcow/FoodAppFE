@@ -64,7 +64,6 @@ class AccountRepoImpl @Inject constructor(
     }
 
     override fun getUserProfile(): Account {
-        Firebase.auth.currentUser?.reload()
         return Firebase.auth.currentUser?.toAppUser() ?: Account()
     }
 
